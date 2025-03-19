@@ -1,0 +1,23 @@
+# Python
+*.pyc
+**/__pycache__/
+
+# Virtual Environment
+env/
+venv/
+bin/
+lib/
+lib64/
+include/
+
+# Dja/py
+!*/migrations/__init__.py
+
+# IDE
+.vscode/
+.ideango
+db.sqlite3
+*.log
+
+# Migrations
+*/migrations/*.

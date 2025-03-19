@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Beach Calendar{% endblock %}
+{% block nav %}
+    <ul>
+        <li><a href="{% url 'index' %}">Home</a></li>
+        <li><a href="{% url 'add_entry' %}">Add Entry</a></li>
+        <li><a href="{% url 'view_month' %}">View Month</a></li>
+        <li><a href="{% url 'view_week' %}">View Week</a></li>
+    </ul>
+{% endblock %}
+
+{% block content %}
+<body>
+    <h1>Beach Calendar</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Beach</th>
+                <th>Weather Conditions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+                <tr>
+                    <td>{{ entry.date }}</td>
+                    <td>{{ entry.beach }}</td>
+                    <td>{{ entry.weather_conditions }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No entries available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+{% endblock %}
