@@ -12,6 +12,7 @@ include/
 
 # Dja/py
 !*/migrations/__init__.py
+manage.py
 
 # IDE
 .vscode/
@@ -20,4 +21,4 @@ db.sqlite3
 *.log
 
 # Migrations
-*/migrations/*.
+**/migrations/*.py

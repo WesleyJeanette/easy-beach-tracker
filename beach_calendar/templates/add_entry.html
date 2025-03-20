@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Beach Calendar{% endblock %}
+
+{% block content %}
+<body>
+    <h1>Create a New Calendar Entry</h1>
+    <form method="post">
+        {% csrf_token %}
+        
+        <label for="beach">Beach Name:</label>
+        <input type="text" id="beach" name="beach" list="recent-beaches" required>
+        <datalist id="recent-beaches">
+            {% for beach in recent_beaches %}
+                <option value="{{ beach }}"></option>
+            {% endfor %}
+        </datalist>
+        <br><br>
+
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required><br><br>
+
+        <label for="time_of_visit">Time:</label>
+        <input type="time" id="time_of_visit" name="time_of_visit" required><br><br>
+
+        <label for="notes">Notes:</label>
+        <textarea id="notes" name="notes"></textarea><br><br>
+
+        <label for="weather_conditions">Weather Conditions:</label>
+        <input type="text" id="weather_conditions" name="weather_conditions"><br><br>
+
+        <label for="water_conditions">Water Conditions:</label>
+        <input type="text" id="water_conditions" name="water_conditions"><br><br>
+        
+        <label for="walked">Walked:</label>
+        <input type="checkbox" id="walked" name="walked"><br><br>
+
+        <label for="swam">Swam:</label>
+        <input type="checkbox" id="swam" name="swam"><br><br>
+
+        <button type="submit">Create Entry</button>
+    </form>
+</body>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Beach Calendar{% endblock %}
+
+{% block content %}
+<body>
+    <h1>Beach Calendar Details</h1>
+    <form method="post" style="display: inline;">
+        {% csrf_token %}
+        
+        <label for="beach">Beach Name:</label>
+        <input type="text" id="beach" name="beach" list="recent-beaches" value="{{ entry.beach }}" required>
+        <datalist id="recent-beaches">
+            {% for beach in recent_beaches %}
+                <option value="{{ beach }}"></option>
+            {% endfor %}
+        </datalist>
+        <br><br>
+
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" value="{{ entry.date }}" required><br><br>
+
+        <label for="time_of_visit">Time:</label>
+        <input type="time" id="time_of_visit" name="time_of_visit" value="{{ entry.time_of_visit }}" required><br><br>
+
+        <label for="notes">Notes:</label>
+        <textarea id="notes" name="notes">{{ entry.notes }}</textarea><br><br>
+
+        <label for="weather_conditions">Weather Conditions:</label>
+        <input type="text" id="weather_conditions" name="weather_conditions" value="{{ entry.weather_conditions }}"><br><br>
+
+        <label for="water_conditions">Water Conditions:</label>
+        <input type="text" id="water_conditions" name="water_conditions" value="{{ entry.water_conditions }}"><br><br>
+        
+        <label for="walked">Walked:</label>
+        <input type="checkbox" id="walked" name="walked" {% if entry.walked %}checked{% endif %}><br><br>
+
+        <label for="swam">Swam:</label>
+        <input type="checkbox" id="swam" name="swam" {% if entry.swam %}checked{% endif %}><br><br>
+
+        <button type="submit" class="btn btn-primary">Update Entry</button>
+    </form>
+
+    <form id="delete-form" style="display: inline; float: right;" onsubmit="return confirmDelete();">
+        {% csrf_token %}
+        <button type="button" class="btn btn-danger" onclick="deleteEntry({{ entry.id }})">Delete Entry</button>
+    </form>
+
+    <script>
+        function deleteEntry(entryId) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                fetch(`/beach/entry/${entryId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/beach'; // Redirect after successful deletion
+                    } else {
+                        alert('Failed to delete the entry.');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+{% endblock %}

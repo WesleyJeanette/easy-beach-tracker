@@ -1,6 +1,6 @@
-from django.shortcuts import render
-
-from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from .models import BeachCalendarEntry
 import datetime
 import calendar
@@ -57,6 +57,28 @@ def show_week(request):
     return render(request, 'week_view.html', {'entries': entries})
 
 def entry_detail(request, entry_id):
+    if request.method == 'POST':
+        BeachCalendarEntry.objects.filter(id=entry_id).update(
+            date=request.POST.get('date'),
+            beach=request.POST.get('beach'),
+            walked=request.POST.get('walked') == 'on',
+            notes=request.POST.get('notes'),
+            water_conditions=request.POST.get('water_conditions'),
+            weather_conditions=request.POST.get('weather_conditions'),
+            #air_temperature=request.POST.get('air_temperature'),
+            #water_temperature=request.POST.get('water_temperature'),
+            swam=request.POST.get('swam') == 'on',
+            time_of_visit=request.POST.get('time_of_visit'),
+            #duration=request.POST.get('duration'),
+            #tide=request.POST.get('tide')
+        )
+        entry = BeachCalendarEntry.objects.get(id=entry_id)
+        return render(request, 'entry_detail.html', {'entry': entry})
+    if request.method == "DELETE":
+        entry = get_object_or_404(BeachCalendarEntry, id=entry_id)
+        entry.delete()
+        return JsonResponse({'success': True})
+    # else is a GET
     entry = BeachCalendarEntry.objects.get(id=entry_id)
     return render(request, 'entry_detail.html', {'entry': entry})
 
@@ -71,16 +93,20 @@ def add_entry(request):
             notes=request.POST.get('notes'),
             water_conditions=request.POST.get('water_conditions'),
             weather_conditions=request.POST.get('weather_conditions'),
-            air_temperature=request.POST.get('air_temperature'),
-            water_temperature=request.POST.get('water_temperature'),
+            #air_temperature=request.POST.get('air_temperature'),
+            #water_temperature=request.POST.get('water_temperature'),
             swam=request.POST.get('swam') == 'on',
             time_of_visit=request.POST.get('time_of_visit'),
-            duration=request.POST.get('duration'),
-            tide=request.POST.get('tide')
+            #duration=request.POST.get('duration'),
+            #tide=request.POST.get('tide')
         )
+
         return render(request, 'index.html')
 
-    return render(request, 'add_entry.html')
+    # When the request method is GET, include any
+    # recient beach names in the form
+    recent_beach_names = BeachCalendarEntry.objects.values('beach').distinct().order_by('-date')[:5]
+    return render(request, 'add_entry.html', {'recent_beach_names': recent_beach_names})
 
 def edit_entry(request, entry_id):
     entry = BeachCalendarEntry.objects.get(id=entry_id)
@@ -91,11 +117,3 @@ def edit_entry(request, entry_id):
         # Display the form
         pass
     return render(request, 'edit_entry.html', {'entry': entry})
-
-def delete_entry(request, entry_id):
-    entry = BeachCalendarEntry.objects.get(id=entry_id)
-    if request.method == 'DELETE':
-        entry.delete()
-        return render(request, 'index.html')
-    else:
-        return render(request, 'delete_entry.html', {'entry': entry})
