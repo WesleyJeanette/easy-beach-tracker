@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Beach Calendar{% endblock %}
+
+{% block content %}
+<div class="calendar-container">
+    <h1>Beach Calendar - {{ month_name }} {{ year }}</h1>
+    <table class="calendar table table-bordered">
+        <thead>
+            <tr>
+                <th>Sun</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for week in calendar %}
+            <tr>
+                {% for day in week %}
+                <td>
+                    {% if day %}
+                        <div class="date">{{ day.date }}</div>
+                        {% if day.entries %}
+                            <ul>
+                                {% for entry in day.entries %}
+                                <li>
+                                    <a href="{% url 'entry_detail' entry.id %}">Details</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

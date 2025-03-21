@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import BeachCalendarEntry
 import datetime
-import calendar
+from calendar import monthcalendar, monthrange, month_name
 
 # Create your views here.
 
@@ -21,18 +21,32 @@ def show_month(request):
     end_date = None
     if requested_month and requested_year:
         start_date = datetime.date(int(requested_year), int(requested_month), 1)
-        end_date = datetime.date(int(requested_year), int(requested_month), calendar.monthrange(int(requested_year), int(requested_month))[1])
+        end_date = datetime.date(int(requested_year), int(requested_month), monthrange(int(requested_year), int(requested_month))[1])
     else:
         # If no month and year are provided, show the current month
         today = datetime.date.today()
         current_month = today.month
         current_year = today.year
         start_date = datetime.date(current_year, current_month, 1)
-        end_date = datetime.date(current_year, current_month, calendar.monthrange(current_year, current_month)[1])
+        end_date = datetime.date(current_year, current_month, monthrange(current_year, current_month)[1])
     
-    entries = BeachCalendarEntry.objects.filter(date__gte=start_date, date__lte=end_date)
-    entries = entries.order_by('-date')
-    return render(request, 'month_view.html', {'entries': entries})
+    my_calendar = []
+    month_days = monthcalendar(start_date.year, start_date.month)
+    for week in month_days:
+        week_entries = []
+        for day in week:
+            if day == 0:
+                week_entries.append(None)
+            else:
+                day_date = datetime.date(start_date.year, start_date.month, day)
+                day_entries = BeachCalendarEntry.objects.filter(date=day_date)
+                week_entries.append({'date': day, 'entries': day_entries})
+        my_calendar.append(week_entries)
+    return render(request, 'month_view.html', {
+        'calendar': my_calendar,
+        'month_name' : month_name[start_date.month],
+        'year': start_date.year,
+        })
 
 def show_week(request):
     requested_week = request.GET.get('week')
