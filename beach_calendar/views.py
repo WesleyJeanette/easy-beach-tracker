@@ -1,18 +1,19 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from .models import BeachCalendarEntry
 import datetime
 from calendar import monthcalendar, monthrange, month_name
 
 # Create your views here.
 
+@login_required
 def index(request):
-    entries = BeachCalendarEntry.objects.all()
-    entries = entries.order_by('-date')
-    entries = entries[:10]  # Limit to the last 10 entries
+    entries = BeachCalendarEntry.objects.filter(user=request.user).order_by('-date')[:10]
     return render(request, 'index.html', {'entries': entries})
 
+@login_required
 def show_month(request):
     requested_month = request.GET.get('month')
     requested_year = request.GET.get('year')
@@ -39,7 +40,7 @@ def show_month(request):
                 week_entries.append(None)
             else:
                 day_date = datetime.date(start_date.year, start_date.month, day)
-                day_entries = BeachCalendarEntry.objects.filter(date=day_date)
+                day_entries = BeachCalendarEntry.objects.filter(user=request.user, date=day_date)
                 week_entries.append({'date': day, 'entries': day_entries})
         my_calendar.append(week_entries)
     return render(request, 'month_view.html', {
@@ -48,6 +49,7 @@ def show_month(request):
         'year': start_date.year,
         })
 
+@login_required
 def show_week(request):
     requested_week = request.GET.get('week')
     requested_year = request.GET.get('year')
@@ -66,13 +68,14 @@ def show_week(request):
         start_date = today - datetime.timedelta(days=today.weekday())  # Monday of the current week
         end_date = start_date + datetime.timedelta(days=6)  # Sunday of the current week
     
-    entries = BeachCalendarEntry.objects.filter(date__gte=start_date, date__lte=end_date)
+    entries = BeachCalendarEntry.objects.filter(user=request.user, date__gte=start_date, date__lte=end_date)
     entries = entries.order_by('-date')
     return render(request, 'week_view.html', {'entries': entries})
 
+@login_required
 def entry_detail(request, entry_id):
     if request.method == 'POST':
-        BeachCalendarEntry.objects.filter(id=entry_id).update(
+        BeachCalendarEntry.objects.filter(id=entry_id, user=request.user).update(
             date=request.POST.get('date'),
             beach=request.POST.get('beach'),
             walked=request.POST.get('walked') == 'on',
@@ -86,21 +89,23 @@ def entry_detail(request, entry_id):
             #duration=request.POST.get('duration'),
             #tide=request.POST.get('tide')
         )
-        entry = BeachCalendarEntry.objects.get(id=entry_id)
+        entry = BeachCalendarEntry.objects.get(id=entry_id, user=request.user)
         return render(request, 'entry_detail.html', {'entry': entry})
     if request.method == "DELETE":
-        entry = get_object_or_404(BeachCalendarEntry, id=entry_id)
+        entry = get_object_or_404(BeachCalendarEntry, id=entry_id, user=request.user)
         entry.delete()
         return JsonResponse({'success': True})
     # else is a GET
-    entry = BeachCalendarEntry.objects.get(id=entry_id)
+    entry = BeachCalendarEntry.objects.get(id=entry_id, user=request.user)
     return render(request, 'entry_detail.html', {'entry': entry})
 
+@login_required
 def add_entry(request):
     if request.method == 'POST':
         # Process the form data, in the future 
         # autofill some of the data, like tide, weather, etc.
         BeachCalendarEntry.objects.create(
+            user=request.user,
             date=request.POST.get('date'),
             beach=request.POST.get('beach'),
             walked=request.POST.get('walked') == 'on',
@@ -115,13 +120,14 @@ def add_entry(request):
             #tide=request.POST.get('tide')
         )
 
-        return render(request, 'index.html')
+        return redirect('home')
 
     # When the request method is GET, include any
     # recient beach names in the form
-    recent_beach_names = BeachCalendarEntry.objects.values('beach').distinct().order_by('-date')[:5]
+    recent_beach_names = BeachCalendarEntry.objects.filter(user=request.user).values('beach').distinct().order_by('-date')[:5]
     return render(request, 'add_entry.html', {'recent_beach_names': recent_beach_names})
 
+@login_required
 def edit_entry(request, entry_id):
     entry = BeachCalendarEntry.objects.get(id=entry_id)
     if request.method == 'PATCH':
