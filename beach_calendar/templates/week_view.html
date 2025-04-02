@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Weekly Calendar{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Week of {{ start_date }} - {{ end_date }}</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+                <th>Sunday</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for day in week_entries %}
+                <td>
+                    <strong>{{ day.date }}</strong>
+                    {% if day.entries %}
+                        <ul>
+                            {% for entry in day.entries %}
+                            <li>
+                                <a href="{% url 'entry_detail' entry.id %}">{{ entry.beach }}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No entries</p>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

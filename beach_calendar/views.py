@@ -54,23 +54,28 @@ def show_week(request):
     requested_week = request.GET.get('week')
     requested_year = request.GET.get('year')
 
-    start_date = None
-    end_date = None
     if requested_week and requested_year:
         # Calculate the start and end dates of the requested week
         week_number = int(requested_week)
         year = int(requested_year)
         start_date = datetime.date.fromisocalendar(year, week_number, 1)  # Monday of the week
-        end_date = start_date + datetime.timedelta(days=6)  # Sunday of the week
     else:
         # If no week and year are provided, show the current week
         today = datetime.date.today()
         start_date = today - datetime.timedelta(days=today.weekday())  # Monday of the current week
-        end_date = start_date + datetime.timedelta(days=6)  # Sunday of the current week
-    
-    entries = BeachCalendarEntry.objects.filter(user=request.user, date__gte=start_date, date__lte=end_date)
-    entries = entries.order_by('-date')
-    return render(request, 'week_view.html', {'entries': entries})
+
+    # Generate the week calendar
+    week_entries = []
+    for day_offset in range(7):  # Loop through the 7 days of the week
+        day_date = start_date + datetime.timedelta(days=day_offset)
+        day_entries = BeachCalendarEntry.objects.filter(user=request.user, date=day_date)
+        week_entries.append({'date': day_date, 'entries': day_entries})
+
+    return render(request, 'week_view.html', {
+        'week_entries': week_entries,
+        'start_date': start_date,
+        'end_date': start_date + datetime.timedelta(days=6),  # Sunday of the week
+    })
 
 @login_required
 def entry_detail(request, entry_id):

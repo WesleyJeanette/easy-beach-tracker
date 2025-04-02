@@ -27,7 +27,7 @@
                             <ul>
                                 {% for entry in day.entries %}
                                 <li>
-                                    <a href="{% url 'entry_detail' entry.id %}">Details</a>
+                                    <a href="{% url 'entry_detail' entry.id %}">{{ entry.beach }}</a>
                                 </li>
                                 {% endfor %}
                             </ul>
