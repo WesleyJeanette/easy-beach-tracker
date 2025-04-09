@@ -17,10 +17,10 @@
         <br><br>
 
         <label for="date">Date:</label>
-        <input type="date" id="date" name="date" value="{{ entry.date }}" required><br><br>
+        <input type="date" id="date" name="date" value="{{ entry.date|date:'Y-m-d' }}" required><br><br>
 
         <label for="time_of_visit">Time:</label>
-        <input type="time" id="time_of_visit" name="time_of_visit" value="{{ entry.time_of_visit }}" required><br><br>
+        <input type="time" id="time_of_visit" name="time_of_visit" value="{{ entry.time_of_visit|time:'H:i' }}" required><br><br>
 
         <label for="notes">Notes:</label>
         <textarea id="notes" name="notes">{{ entry.notes }}</textarea><br><br>

@@ -1,7 +1,10 @@
 # Variables
 IMAGE_NAME = easy-beach-tracker
 CONTAINER_NAME = easy-beach-tracker-container
-PORT = 8000
+PORT = 8023
+
+run-local:
+	python manage.py runserver 0.0.0.0:$(PORT)
 
 # Build the Docker image
 build:
@@ -21,4 +24,5 @@ rebuild: stop build run
 
 # Clean up dangling Docker images
 clean:
+	docker rmi $(IMAGE_NAME) || true
 	docker image prune -f

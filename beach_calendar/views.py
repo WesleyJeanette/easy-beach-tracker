@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from .models import BeachCalendarEntry
 import datetime
-from calendar import monthcalendar, monthrange, month_name
+from calendar import setfirstweekday, monthcalendar, monthrange, month_name
 
 # Create your views here.
 
@@ -31,6 +31,9 @@ def show_month(request):
         start_date = datetime.date(current_year, current_month, 1)
         end_date = datetime.date(current_year, current_month, monthrange(current_year, current_month)[1])
     
+    # Set the first day of the month
+    setfirstweekday(6)  # Set Sunday as the first day of the week
+
     my_calendar = []
     month_days = monthcalendar(start_date.year, start_date.month)
     for week in month_days:
