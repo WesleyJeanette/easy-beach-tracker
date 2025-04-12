@@ -19,7 +19,7 @@
         <tbody>
             <tr>
                 {% for day in week_entries %}
-                <td>
+                <td class="{% if day.date == today %}today{% endif %}">
                     <strong>{{ day.date }}</strong>
                     {% if day.entries %}
                         <ul>

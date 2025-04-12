@@ -20,7 +20,7 @@
             {% for week in calendar %}
             <tr>
                 {% for day in week %}
-                <td>
+                <td class="{% if day and day.date == today %}today{% elif day and day.entries %}has-entries{% elif day  %}no-entries{% else %}empty-day{% endif %}">
                     {% if day %}
                         <div class="date">{{ day.date }}</div>
                         {% if day.entries %}

@@ -25,11 +25,13 @@
         <label for="notes">Notes:</label>
         <textarea id="notes" name="notes"></textarea><br><br>
 
-        <label for="weather_conditions">Weather Conditions:</label>
-        <input type="text" id="weather_conditions" name="weather_conditions"><br><br>
+        <div id="conditions-fields">
+            <label for="weather_conditions">Weather Conditions:</label>
+            <input type="text" id="weather_conditions" name="weather_conditions"><br><br>
 
-        <label for="water_conditions">Water Conditions:</label>
-        <input type="text" id="water_conditions" name="water_conditions"><br><br>
+            <label for="water_conditions">Water Conditions:</label>
+            <input type="text" id="water_conditions" name="water_conditions"><br><br>
+        </div>
         
         <label for="walked">Walked:</label>
         <input type="checkbox" id="walked" name="walked"><br><br>
@@ -37,7 +39,30 @@
         <label for="swam">Swam:</label>
         <input type="checkbox" id="swam" name="swam"><br><br>
 
+        <label for="pull_conditions">Get Conditions:</label>
+        <input type="checkbox" id="pull_conditions" name="pull_conditions" {% if entry.pull_conditions %}checked{% endif %} onchange="toggleConditionsFields()"><br><br>
+
         <button type="submit">Create Entry</button>
     </form>
+
+    <script>
+        function toggleConditionsFields() {
+            const pullConditionsCheckbox = document.getElementById('pull_conditions');
+            const conditionsFields = document.getElementById('conditions-fields');
+
+            if (pullConditionsCheckbox.checked) {
+                // Hide the weather and water conditions fields
+                conditionsFields.style.display = 'none';
+            } else {
+                // Show the weather and water conditions fields
+                conditionsFields.style.display = 'block';
+            }
+        }
+
+        // Initialize the visibility of the fields on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleConditionsFields();
+        });
+    </script>
 </body>
 {% endblock %}
