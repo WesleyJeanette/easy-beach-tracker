@@ -2,35 +2,39 @@
 {% block title %}Weekly Calendar{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="calendar-container mt-4">
     <h2>Week of {{ start_date }} - {{ end_date }}</h2>
-    <table class="table table-bordered">
+    <table class="calendar table table-bordered">
         <thead>
             <tr>
+                <th>Sunday</th>
                 <th>Monday</th>
                 <th>Tuesday</th>
                 <th>Wednesday</th>
                 <th>Thursday</th>
                 <th>Friday</th>
                 <th>Saturday</th>
-                <th>Sunday</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 {% for day in week_entries %}
-                <td class="{% if day.date == today %}today{% endif %}">
-                    <strong>{{ day.date }}</strong>
-                    {% if day.entries %}
-                        <ul>
-                            {% for entry in day.entries %}
-                            <li>
-                                <a href="{% url 'entry_detail' entry.id %}">{{ entry.beach }}</a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p>No entries</p>
+                <td class="{% if day and day.date.day == today.day %}today{% elif day and day.entries %}has-entries{% elif day and day.date < today.day %}no-entries{% else %}empty-day{% endif %}">
+                    {% if day %}
+                        <div class="date">
+                            <a href="{% url 'add_entry' %}?date={{ today|date:"Y-m" }}-{{ day.date.day }}">{{ day.date.day }}</a>
+                        </div>
+                        {% if day.entries %}
+                            <ul>
+                                {% for entry in day.entries %}
+                                <li>
+                                    <a href="{% url 'entry_detail' entry.id %}">{{ entry.beach }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% elif day.date < today.day %}
+                            <p>No entries</p>
+                        {% endif %}
                     {% endif %}
                 </td>
                 {% endfor %}

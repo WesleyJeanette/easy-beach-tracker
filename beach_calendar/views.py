@@ -64,11 +64,11 @@ def show_week(request):
         # Calculate the start and end dates of the requested week
         week_number = int(requested_week)
         year = int(requested_year)
-        start_date = datetime.date.fromisocalendar(year, week_number, 1)  # Monday of the week
+        start_date = datetime.date.fromisocalendar(year, week_number, 7)  # Sunday of the week
     else:
         # If no week and year are provided, show the current week
         today = datetime.date.today()
-        start_date = today - datetime.timedelta(days=today.weekday())  # Monday of the current week
+        start_date = today - datetime.timedelta(days=today.weekday() + 1)  # Sunday of the current week
 
     # Generate the week calendar
     week_entries = []
@@ -165,7 +165,13 @@ def add_entry(request):
     # When the request method is GET, include any
     # recient beach names in the form
     recent_beach_names = BeachCalendarEntry.objects.filter(user=request.user).values('beach').distinct().order_by('-date')[:5]
-    return render(request, 'add_entry.html', {'recent_beach_names': recent_beach_names})
+
+    selected_date = request.GET.get('date')  # Retrieve the date from the query parameter
+    context = {
+        'selected_date': selected_date,  # Pass the date to the template
+        'recent_beach_names': recent_beach_names,
+    }
+    return render(request, 'add_entry.html', context)
 
 @login_required
 def edit_entry(request, entry_id):
