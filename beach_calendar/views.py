@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.utils.timezone import make_aware
 from .models import BeachCalendarEntry
 import datetime
 from . import utils
@@ -116,7 +117,7 @@ def entry_detail(request, entry_id):
 
         print(water_conditions, weather_conditions, air_temperature, water_temperature, tide)
         BeachCalendarEntry.objects.filter(id=entry_id, user=request.user).update(
-            date=request.POST.get('date'),
+            date=visit_date,
             beach=request.POST.get('beach'),
             walked=request.POST.get('walked') == 'on',
             notes=request.POST.get('notes'),
@@ -125,7 +126,7 @@ def entry_detail(request, entry_id):
             air_temperature=air_temperature,
             water_temperature=water_temperature,
             swam=request.POST.get('swam') == 'on',
-            time_of_visit=request.POST.get('time_of_visit'),
+            time_of_visit=visit_time,
             #duration=request.POST.get('duration'),
             tide=tide
         )
@@ -142,22 +143,44 @@ def entry_detail(request, entry_id):
 @login_required
 def add_entry(request):
     if request.method == 'POST':
+        visit_date = request.POST.get('date')
+        visit_time = request.POST.get('time_of_visit')
+        if request.POST.get('pull_conditions') == 'on':
+            # In the future, we can pull weather conditions from an API
+            visit_datetime = make_aware(datetime.datetime.strptime(f"{visit_date} {visit_time}", "%Y-%m-%d %H:%M"))
+
+            marine = utils.collect_marine_weather_data(27.76, -80.401111)
+            weather = utils.collect_weather_forcast_data(27.76, -80.401111)
+            marine_match = marine.iloc[(marine['date'] - visit_datetime).abs().argsort()[:1]]
+            weather_match = weather.iloc[(weather['date'] - visit_datetime).abs().argsort()[:1]]
+            water_conditions = utils.describe_marine_weather_data(marine_match)
+            weather_conditions = weather_match['temperature_2m'].values[0]
+            air_temperature = weather_match['temperature_2m'].values[0]
+            water_temperature = marine_match['sea_surface_temperature'].values[0]
+            tide = marine_match['sea_level_height_msl'].values[0]
+        else:
+            water_conditions = request.POST.get('water_conditions')
+            weather_conditions = request.POST.get('weather_conditions')
+            air_temperature = request.POST.get('air_temperature')
+            water_temperature = request.POST.get('water_temperature')
+            tide = request.POST.get('tide')
+
         # Process the form data, in the future 
         # autofill some of the data, like tide, weather, etc.
         BeachCalendarEntry.objects.create(
             user=request.user,
-            date=request.POST.get('date'),
+            date=visit_date,
             beach=request.POST.get('beach'),
             walked=request.POST.get('walked') == 'on',
             notes=request.POST.get('notes'),
-            water_conditions=request.POST.get('water_conditions'),
+            water_conditions=water_conditions,
             weather_conditions=request.POST.get('weather_conditions'),
-            #air_temperature=request.POST.get('air_temperature'),
-            #water_temperature=request.POST.get('water_temperature'),
+            air_temperature=air_temperature,
+            water_temperature=water_temperature,
             swam=request.POST.get('swam') == 'on',
-            time_of_visit=request.POST.get('time_of_visit'),
+            time_of_visit=visit_time,
             #duration=request.POST.get('duration'),
-            #tide=request.POST.get('tide')
+            tide=tide
         )
 
         return redirect('home')
