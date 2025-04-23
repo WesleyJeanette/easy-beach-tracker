@@ -24,13 +24,13 @@ def collect_marine_weather_data(lat, lon):
     params = {
         "latitude": lat,
         "longitude": lon,
-        "hourly": ["wave_height", "wave_direction", "wave_period", "ocean_current_velocity", "ocean_current_direction", "sea_surface_temperature", "sea_level_height_msl"],
+        "hourly": ["wave_height", "wave_direction", "wave_period", "ocean_current_velocity", "ocean_current_direction", "sea_surface_temperature", "sea_level_height_msl", "swell_wave_period"],
         "timezone": "America/New_York",
         "length_unit": "imperial",
         "wind_speed_unit": "mph"
     }
     responses = openmeteo.weather_api(url, params=params)
-
+ 
     # Add a for loop for multiple locations or weather models
     response = responses[0]
 
@@ -43,6 +43,8 @@ def collect_marine_weather_data(lat, lon):
     hourly_ocean_current_direction = hourly.Variables(4).ValuesAsNumpy()
     hourly_sea_surface_temperature = hourly.Variables(5).ValuesAsNumpy()
     hourly_sea_level_height_msl = hourly.Variables(6).ValuesAsNumpy()
+    hourly_swell_period = hourly.Variables(7).ValuesAsNumpy()
+
 
     hourly_data = {"date": pd.date_range(
 	    start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
@@ -54,15 +56,57 @@ def collect_marine_weather_data(lat, lon):
     hourly_data["wave_height"] = hourly_wave_height
     hourly_data["wave_direction"] = hourly_wave_direction
     hourly_data["wave_period"] = hourly_wave_period
+    hourly_data["swell_period"] = hourly_swell_period
     hourly_data["ocean_current_velocity"] = hourly_ocean_current_velocity
     hourly_data["ocean_current_direction"] = hourly_ocean_current_direction
     hourly_data["sea_surface_temperature"] = hourly_sea_surface_temperature
     hourly_data["sea_level_height_msl"] = hourly_sea_level_height_msl
 
-    return pd.DataFrame(data = hourly_data)
+    df = pd.DataFrame(data = hourly_data)
+    df.to_pickle("marine_forecast_data.pkl")
+    return df
 
 def describe_marine_weather_data(df):
-    return f'Marine Data Description: Wave Height {df["wave_height"].iloc[0]}, Wave Direction {df["wave_direction"].iloc[0]}, Wave Period {df["wave_period"].iloc[0]}, Ocean Current Velocity {df["ocean_current_velocity"].iloc[0]}, Ocean Current Direction {df["ocean_current_direction"].iloc[0]}'        
+    '''Quick rule of thumb:
+    small waves + short period + light current = green
+    medium waves + medium period + moderate current = yellow
+    any long-peridod swell or strong rip current = red
+
+    wave height > 4ft often leads to strong shore break 
+    wave period: longer periods = more power 
+    long period swells often cause surprise surges and rip current formation
+
+    swell direction:
+      direct onshore waves hit straight and dump engery on the beach
+      side shore waves hit at an angle and can cause rip currents
+      offshore safer especially with low wind
+
+    ocean current velocity:
+      velocity > 1kt (1.15 mph) is considered strong
+    ocean current direction:
+       longshore   
+
+    For Florida
+        Velocity < 0.2 mph is considered light
+        Velocity < 0.6 mph is considered moderate
+        Velocity >= 0.6 mph is considered strong
+        Wave Hight < 1 ft is considered small
+        Wave Height 1-3 ft is considered moderate, fun body surfing
+        Wave Height 3-6 ft is rough
+        Wave Height > 6 ft is considered dangerous
+
+    '''
+    if df.empty:
+        return "No marine data available."
+    condition_string = f'Marine Data Description: Wave Height {df["wave_height"].iloc[0]}ft, Wave Direction {df["wave_direction"].iloc[0]}, Wave Period {df["wave_period"].iloc[0]}s, Ocean Current Velocity {df["ocean_current_velocity"].iloc[0]}mph, Ocean Current Direction {df["ocean_current_direction"].iloc[0]}'
+    if df["wave_height"].iloc[0] < 2 and df["wave_period"].iloc[0] < 5 and df["ocean_current_velocity"].iloc[0] < 0.2:
+        return f'{condition_string} - Conditions are good for swimming.'
+    elif df["wave_height"].iloc[0] < 4 and df["wave_period"].iloc[0] < 8 and df["ocean_current_velocity"].iloc[0] < 0.6:
+        return f'{condition_string} - Conditions are moderate, caution advised.'
+    elif df["wave_height"].iloc[0] >= 4 or df["wave_period"].iloc[0] >= 10 or df["ocean_current_velocity"].iloc[0] >= 0.6:
+        return f'{condition_string} - Conditions are dangerous, swimming is not recommended.'
+    
+    return f'{condition_string} - Conditions are unknown, please check the data.'   
 
 def collect_weather_forcast_data(lat, lon):
     openmeteo = setup_openmeteo_client()
@@ -81,7 +125,7 @@ def collect_weather_forcast_data(lat, lon):
     # Make sure all required weather variables are listed here
     # The order of variables in hourly or daily is important to assign them correctly below
     responses = openmeteo.weather_api(url, params=params)
-    
+
     # Add a for loop for multiple locations or weather models
     response = responses[0]
 
