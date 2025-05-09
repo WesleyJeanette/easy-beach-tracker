@@ -22,7 +22,7 @@
                 <td class="{% if day and day.date.day == today.day %}today{% elif day and day.entries %}has-entries{% elif day and day.date < today.day %}no-entries{% else %}empty-day{% endif %}">
                     {% if day %}
                         <div class="date">
-                            <a href="{% url 'add_entry' %}?date={{ today|date:"Y-m" }}-{{ day.date.day }}">{{ day.date.day }}</a>
+                            <a href="{% url 'add_entry' %}?date={{ today|date:"Y-m" }}-{{ day.date.day|stringformat:"02d" }}">{{ day.date.day }}</a>
                         </div>
                         {% if day.entries %}
                             <ul>
